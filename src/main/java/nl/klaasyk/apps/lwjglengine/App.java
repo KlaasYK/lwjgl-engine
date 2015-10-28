@@ -5,7 +5,7 @@ import org.lwjgl.Sys;
 import org.lwjgl.glfw.*;
 import org.lwjgl.opengl.*;
 
-import nl.klaasyk.apps.util.FileReader;
+import nl.klaasyk.apps.util.ShaderProgram;
 import nl.klaasyk.apps.util.TextureLoader;
 
 import static org.lwjgl.glfw.GLFW.*;
@@ -108,28 +108,8 @@ public class App {
 		System.out.println("GLSL version " + glGetString(GL_SHADING_LANGUAGE_VERSION));
 
 		// Create and attach the shaders
-		final int programID = glCreateProgram();
-		// TODO: either load them with class loader, or let them hack it ;)
-		String vertexShaderSource = FileReader.readFile("vertex.vert");
-		String fragmentShaderSource = FileReader.readFile("fragment.frag");
-		final int vertexShaderID = glCreateShader(GL_VERTEX_SHADER);
-		final int fragmentShaderID = glCreateShader(GL_FRAGMENT_SHADER);
-		glShaderSource(vertexShaderID, vertexShaderSource);
-		glShaderSource(fragmentShaderID, fragmentShaderSource);
-		glCompileShader(vertexShaderID);
-		glCompileShader(fragmentShaderID);
-		if (glGetShaderi(vertexShaderID, GL_COMPILE_STATUS) == GL_FALSE)
-			throw new RuntimeException("Error creating vertex shader\n"
-					+ glGetShaderInfoLog(vertexShaderID, glGetShaderi(vertexShaderID, GL_INFO_LOG_LENGTH)));
-		if (glGetShaderi(fragmentShaderID, GL_COMPILE_STATUS) == GL_FALSE)
-			throw new RuntimeException("Error creating fragment shader\n"
-					+ glGetShaderInfoLog(fragmentShaderID, glGetShaderi(fragmentShaderID, GL_INFO_LOG_LENGTH)));
-		glAttachShader(programID, vertexShaderID);
-		glAttachShader(programID, fragmentShaderID);
 
-		glLinkProgram(programID);
-		if (glGetProgrami(programID, GL_LINK_STATUS) == GL_FALSE)
-			throw new RuntimeException("Unable to link shader program:");
+		ShaderProgram p = new ShaderProgram("vertex.vert", "fragment.frag");
 
 		// Generate and bind a Vertex Array
 		final int vaoID = glGenVertexArrays();
@@ -138,7 +118,7 @@ public class App {
 				-0.8f, -0.8f, // Bottom-left coordinate
 				+0.8f, -0.8f // Bottom-right coordinate
 		};
-		final float[] texcoords = new float[] { +0.0f, +0.0f, +1.0f, +0.0f, +1.0f, +0.0f };
+		final float[] texcoords = new float[] { +0.0f, +0.0f, +1.0f, +0.0f, +1.0f, +1.0f };
 		FloatBuffer verticesBuffer = BufferUtils.createFloatBuffer(vertices.length);
 		FloatBuffer textureBuffer = BufferUtils.createFloatBuffer(texcoords.length);
 		verticesBuffer.put(vertices).flip();
@@ -168,21 +148,24 @@ public class App {
 		while (glfwWindowShouldClose(window) == GL_FALSE) {
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-			glUseProgram(programID);
+			p.use();
+
 			glBindVertexArray(vaoID);
 			glEnableVertexAttribArray(0);
 			glEnableVertexAttribArray(1);
-			
+
 			GL13.glActiveTexture(GL13.GL_TEXTURE0);
 			glBindTexture(GL_TEXTURE_2D, texID);
 
 			glDrawArrays(GL_TRIANGLES, 0, 3);
+			
+			glBindTexture(GL_TEXTURE_2D, 0);
 
 			glDisableVertexAttribArray(0);
 			glDisableVertexAttribArray(1);
 			glBindVertexArray(0);
 
-			glUseProgram(0);
+			p.unbind();
 
 			glfwSwapBuffers(window); // swap the color buffers
 
@@ -192,11 +175,7 @@ public class App {
 		}
 
 		// Clean up shaders
-		glDetachShader(programID, vertexShaderID);
-		glDetachShader(programID, fragmentShaderID);
-		glDeleteShader(vertexShaderID);
-		glDeleteShader(fragmentShaderID);
-		glDeleteProgram(programID);
+		p.dispose();
 
 		glBindVertexArray(0);
 		glDeleteVertexArrays(vaoID);
@@ -204,10 +183,9 @@ public class App {
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
 		glDeleteBuffers(vboID);
 		glDeleteBuffers(vboTex);
-		
-		glBindTexture(GL_TEXTURE_2D, 0);
-		glDeleteTextures(texID);
-		
+
+		TextureLoader.dispose(texID);
+
 	}
 
 	public static void main(String[] args) throws IOException {

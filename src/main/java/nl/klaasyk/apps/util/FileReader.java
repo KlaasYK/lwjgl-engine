@@ -9,19 +9,22 @@ import org.slf4j.LoggerFactory;
 
 /**
  * A class to read files from the file system.
+ * 
  * @author KlaasYK
  *
  */
 public class FileReader {
 
 	private static final Logger l = LoggerFactory.getLogger(FileReader.class);
-	
+
 	/**
 	 * Reads a text file from the file system.
-	 * @param filename file to be read.
+	 * 
+	 * @param filename
+	 *            file to be read.
 	 * @return a String containing the text of the file.
 	 */
-	public static String readFile(String filename) throws IOException{
+	public static String readFile(String filename) throws IOException {
 		Path file = FileSystems.getDefault().getPath(filename);
 		l.trace("Reading file: {}", file.toAbsolutePath());
 		List<String> lines = Files.readAllLines(file);

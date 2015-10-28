@@ -14,16 +14,25 @@ import org.lwjgl.opengl.GL12;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * Load OpenGL Textures.
+ * 
+ * @author KlaasYK
+ *
+ */
 public class TextureLoader {
 
 	private static final Logger l = LoggerFactory.getLogger(TextureLoader.class);
 	private static final int BYTES_PER_PIXEL = 4; // RGBA
 
 	/**
-	 * Loads a texture into graphical memory from a image
+	 * Loads a texture into graphical memory from an image.
+	 * 
 	 * @param filename
-	 * @return textureID to be used
+	 *            of the image used for the texture.
+	 * @return textureID for use with OpenGL texture functions.
 	 * @throws IOException
+	 *             on failure to read the image.
 	 */
 	public static int loadTextureFromImage(String filename) throws IOException {
 		l.trace("Loading texture: {}", filename);
@@ -51,6 +60,17 @@ public class TextureLoader {
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, img.getWidth(), img.getHeight(), 0, GL_RGBA, GL_UNSIGNED_BYTE, buf);
 		glBindTexture(GL_TEXTURE_2D, 0);
 		return textureID;
+	}
+
+	/**
+	 * Disposes all resources taken up by the given texture.
+	 * 
+	 * @param texID
+	 *            OpenGL texture id.
+	 */
+	public static void dispose(int texID) {
+		glBindTexture(GL_TEXTURE_2D, 0);
+		glDeleteTextures(texID);
 	}
 
 }
