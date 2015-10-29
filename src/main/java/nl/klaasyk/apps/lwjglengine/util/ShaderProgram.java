@@ -1,4 +1,4 @@
-package nl.klaasyk.apps.util;
+package nl.klaasyk.apps.lwjglengine.util;
 
 import static org.lwjgl.opengl.GL11.GL_FALSE;
 import static org.lwjgl.opengl.GL20.*;

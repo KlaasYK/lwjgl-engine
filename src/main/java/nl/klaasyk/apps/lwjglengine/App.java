@@ -5,8 +5,8 @@ import org.lwjgl.Sys;
 import org.lwjgl.glfw.*;
 import org.lwjgl.opengl.*;
 
-import nl.klaasyk.apps.util.ShaderProgram;
-import nl.klaasyk.apps.util.TextureLoader;
+import nl.klaasyk.apps.lwjglengine.util.ShaderProgram;
+import nl.klaasyk.apps.lwjglengine.util.TextureLoader;
 
 import static org.lwjgl.glfw.GLFW.*;
 import static org.lwjgl.opengl.GL11.*;
