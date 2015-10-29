@@ -5,17 +5,8 @@ import static org.lwjgl.opengl.GL15.*;
 import static org.lwjgl.opengl.GL20.*;
 import static org.lwjgl.opengl.GL30.*;
 
-import java.awt.Color;
-import java.awt.Font;
-import java.awt.FontFormatException;
-import java.awt.FontMetrics;
-import java.awt.Graphics2D;
-import java.awt.GraphicsConfiguration;
-import java.awt.GraphicsEnvironment;
-import java.awt.RenderingHints;
-import java.awt.Transparency;
+import java.awt.*;
 import java.awt.image.BufferedImage;
-import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
@@ -23,8 +14,6 @@ import java.nio.file.FileSystems;
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
-
-import javax.imageio.ImageIO;
 
 import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL12;
@@ -54,12 +43,12 @@ public class TextRenderer {
 	private float DEFAULT_FONT_SIZE;
 
 	private Font f;
+	private Color c;
 	private FontMetrics fMet;
 
 	private int vaID;
 	private int vboID;
-	
-	
+
 	private int texID;
 
 	/**
@@ -69,9 +58,12 @@ public class TextRenderer {
 	 *            .ttf file
 	 * @param fontsize
 	 *            size of the font
+	 * @param c
+	 *            color of the text
 	 */
-	public TextRenderer(String ttfFilename, float fontsize) {
+	public TextRenderer(String ttfFilename, float fontsize, Color c) {
 		DEFAULT_FONT_SIZE = fontsize;
+		this.c = c;
 		f = loadFont(ttfFilename);
 		generateTexture();
 	}
@@ -103,10 +95,8 @@ public class TextRenderer {
 		imageGraphics.setFont(f);
 		imageGraphics.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_OFF);
 		imageGraphics.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
-
 		// draw every CHAR by line...
-		// FIXME, make color selectable
-		imageGraphics.setColor(Color.WHITE);
+		imageGraphics.setColor(c);
 		CHARS.keySet().stream()
 				.forEach(i -> imageGraphics.drawString(CHARS.get(i), 0, fMet.getMaxAscent() + (getCharHeight() * i)));
 	}
@@ -131,14 +121,7 @@ public class TextRenderer {
 
 		BufferedImage im = generateBufferedImage();
 		drawFontChars(im);
-		
-		try {
-			ImageIO.write(im, "png", new File("test.png"));
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		
+
 		ByteBuffer bb = generateByteBuffer(im);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL12.GL_CLAMP_TO_EDGE);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL12.GL_CLAMP_TO_EDGE);
@@ -146,48 +129,41 @@ public class TextRenderer {
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, (int) getFontImageWidth(), (int) getFontImageHeight(), 0, GL_RGBA,
 				GL_UNSIGNED_BYTE, bb);
-
-
-		
-
 		glBindTexture(GL_TEXTURE_2D, 0);
-		
+
 		vaID = glGenVertexArrays();
 		glBindVertexArray(vaID);
-		
-		int l = 1;
+
+		int l = 0;
 		for (int i = 0; i < CHARS.size(); i++) {
 			l += CHARS.get(i).length();
 		}
-		System.out.println(l);
-		FloatBuffer fb = BufferUtils.createFloatBuffer(l*16);
+		System.out.println("Character height: " + getCharHeight());
+		FloatBuffer fb = BufferUtils.createFloatBuffer(l * 16);
 		CHARS.keySet().stream().forEach(i -> {
 			char[] ca = CHARS.get(i).toCharArray();
 			for (char c : ca) {
-				float x = getCharX(c);
-				float y = getCharY(c);
-				float w = getCharWidth(c);
-				float h = getCharHeight();			
-				fb.put(new float[] {0.0f,0.0f, 0.0f,0.0f,
-						1.0f,0.0f, 1.0f,0.0f,
-						1.0f,-1.0f, 1.0f,1.0f,
-						0.0f,-1.0f, 0.0f,1.0f
-				});
-				
-				/*fb.put(new float[] {0.0f,0.0f, 1f/x,1f/y,
-						1.0f,0.0f, 1f/(x+w),1f/(y),
-						1.0f,-1.0f, 1f/(x+w),1f/(y + h),
-						0.0f,-1.0f, 1f/x,1f/(y + h)
-				});*/
+				float x = 1f / getFontImageWidth() * getCharX(c);
+				float y = 1f / getFontImageHeight() * getCharY(c);
+				float width = getCharWidth(c);
+				float height = getCharHeight();
+				float w = 1f / getFontImageWidth() * width;
+				float h = 1f / getFontImageHeight() * height;
+				float cwidth = width/height;
+				// Character height fixed at 1 TODO: character fixed 0,0 at left top
+				fb.put(new float[] { 0.0f, 0.0f, x, y,
+						cwidth, 0.0f, x + w, y,
+						cwidth, -1.0f, x + w, y + h,
+						0.0f, -1.0f, x,	y + h });
 			}
 		});
 		fb.flip();
 		vboID = glGenBuffers();
 		glBindBuffer(GL_ARRAY_BUFFER, vboID);
 		glBufferData(GL_ARRAY_BUFFER, fb, GL_STATIC_DRAW);
-		glVertexAttribPointer(0, 2, GL_FLOAT, false, 4*4, 0);
-		glVertexAttribPointer(1, 2, GL_FLOAT, false, 4*4, 2*4);
-		
+		glVertexAttribPointer(0, 2, GL_FLOAT, false, 4 * 4, 0);
+		glVertexAttribPointer(1, 2, GL_FLOAT, false, 4 * 4, 2 * 4);
+
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
 		glBindVertexArray(0);
 	}
@@ -228,15 +204,17 @@ public class TextRenderer {
 	 *            String to be rendered
 	 */
 	public void renderString(float xPos, float yPos, String s) {
-		glBindVertexArray(vaID);;
+		glBindVertexArray(vaID);
+		;
 		glEnableVertexAttribArray(0);
 		glEnableVertexAttribArray(1);
-		
+
 		GL13.glActiveTexture(GL13.GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, texID);
-		
-		glDrawArrays(GL_QUADS, 0, 4);
-		
+		// TODO: make projection orthographic
+		// FIXME: fix scaling
+		glDrawArrays(GL_QUADS, 4, 4);
+
 		glBindTexture(GL_TEXTURE_2D, 0);
 		glDisableVertexAttribArray(0);
 		glDisableVertexAttribArray(1);
@@ -263,7 +241,7 @@ public class TextRenderer {
 	public void dispose() {
 		glBindTexture(GL_TEXTURE_2D, 0);
 		glDeleteTextures(texID);
-		
+
 		glBindVertexArray(0);
 		glDeleteVertexArrays(vaID);
 		glBindBuffer(GL_ARRAY_BUFFER, 0);

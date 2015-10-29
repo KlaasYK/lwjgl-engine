@@ -3,6 +3,8 @@
 in vec2 position;
 in vec2 texcoords;
 
+uniform mat4 mvMat;
+
 out vec2 tex_coord;
 
 void main()

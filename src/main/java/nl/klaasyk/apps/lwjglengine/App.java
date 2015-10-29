@@ -14,6 +14,7 @@ import static org.lwjgl.opengl.GL20.*;
 import static org.lwjgl.opengl.GL30.*;
 import static org.lwjgl.system.MemoryUtil.*;
 
+import java.awt.Color;
 import java.io.IOException;
 import java.nio.FloatBuffer;
 
@@ -139,7 +140,7 @@ public class App {
 		// Load the texture
 		final int texID = TextureLoader.loadTextureFromImage("texture.png");
 
-		final TextRenderer norm = new TextRenderer("fonts/OpenSans-Regular.ttf",64);
+		final TextRenderer norm = new TextRenderer("fonts/OpenSans-Regular.ttf",16, Color.BLUE);
 		
 		// Set the clear color
 		glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
