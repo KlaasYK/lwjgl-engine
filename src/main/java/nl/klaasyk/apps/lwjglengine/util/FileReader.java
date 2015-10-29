@@ -26,7 +26,7 @@ public class FileReader {
 	 */
 	public static String readFile(String filename) throws IOException {
 		Path file = FileSystems.getDefault().getPath(filename);
-		l.trace("Reading file: {}", file.toAbsolutePath());
+		l.trace("Reading file: {}", file.toAbsolutePath().toString());
 		List<String> lines = Files.readAllLines(file);
 		return String.join("\n", lines);
 	}

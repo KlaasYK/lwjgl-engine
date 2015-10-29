@@ -5,8 +5,7 @@ import org.lwjgl.Sys;
 import org.lwjgl.glfw.*;
 import org.lwjgl.opengl.*;
 
-import nl.klaasyk.apps.lwjglengine.util.ShaderProgram;
-import nl.klaasyk.apps.lwjglengine.util.TextureLoader;
+import nl.klaasyk.apps.lwjglengine.util.*;
 
 import static org.lwjgl.glfw.GLFW.*;
 import static org.lwjgl.opengl.GL11.*;
@@ -140,6 +139,8 @@ public class App {
 		// Load the texture
 		final int texID = TextureLoader.loadTextureFromImage("texture.png");
 
+		final TextRenderer norm = new TextRenderer("fonts/OpenSans-Regular.ttf",64);
+		
 		// Set the clear color
 		glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
 
@@ -157,7 +158,7 @@ public class App {
 			GL13.glActiveTexture(GL13.GL_TEXTURE0);
 			glBindTexture(GL_TEXTURE_2D, texID);
 
-			glDrawArrays(GL_TRIANGLES, 0, 3);
+			//glDrawArrays(GL_TRIANGLES, 0, 3);
 			
 			glBindTexture(GL_TEXTURE_2D, 0);
 
@@ -165,8 +166,12 @@ public class App {
 			glDisableVertexAttribArray(1);
 			glBindVertexArray(0);
 
+			norm.renderString(0, 0, "T");
+			
 			p.unbind();
-
+			
+			
+			
 			glfwSwapBuffers(window); // swap the color buffers
 
 			// Poll for window events. The key callback above will only be
@@ -185,6 +190,7 @@ public class App {
 		glDeleteBuffers(vboTex);
 
 		TextureLoader.dispose(texID);
+		norm.dispose();
 
 	}
 
