@@ -10,7 +10,7 @@
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<lwjgl.version>3.0.0b-SNAPSHOT</lwjgl.version>
+		<lwjgl.version>3.0.0b</lwjgl.version>
 	</properties>
 
 	<repositories>
